@@ -48,7 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           className="flex items-center cursor-pointer group shrink-0"
           onClick={() => { onNavigate('home'); setQuery(''); }}
         >
-          <div className="brightness-0 dark:brightness-200 scale-90 sm:scale-100">
+          <div className="scale-90 sm:scale-100">
             {LOGO_SVG}
           </div>
           <span className={`text-xl font-bold tracking-tight ml-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
