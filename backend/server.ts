@@ -27,17 +27,22 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
-// MongoDB Connection
-connectDB();
+// MongoDB Connection is handled dynamically per-request in the middleware below
+// to support Vercel serverless cold starts properly.
 
-// Middleware to check DB connection for API routes
-app.use((req, res, next) => {
-  if (req.path.startsWith('/api') && req.path !== '/api/db-status' && mongoose.connection.readyState !== 1) {
-    return res.status(503).json({
-      success: false,
-      error: 'Database not connected.',
-      details: dbError
-    });
+// Middleware to check/establish DB connection for API routes
+app.use(async (req, res, next) => {
+  if (req.path.startsWith('/api') && req.path !== '/api/db-status') {
+    if ((mongoose.connection.readyState as number) !== 1) {
+      await connectDB();
+      if ((mongoose.connection.readyState as number) !== 1) {
+        return res.status(503).json({
+          success: false,
+          error: 'Database not connected. Cold start failed.',
+          details: dbError
+        });
+      }
+    }
   }
   next();
 });
