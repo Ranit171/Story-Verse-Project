@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 export let dbError: string | null = null;
 
 export const connectDB = async () => {
-  const MONGODB_URI = process.env.MONGODB_URI;
+  const MONGODB_URI = process.env.MONGODB_URI || process.env.STORYVERSE_DB_MONGODB_URI;
 
   if (!MONGODB_URI) {
     dbError = 'MONGODB_URI environment variable is missing.';
