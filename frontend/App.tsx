@@ -8,6 +8,9 @@ import { CreatePostForm } from './components/CreatePostForm';
 import { PostList } from './components/PostList';
 import { Profile } from './components/Profile';
 import { ToastContainer } from './components/ToastContainer';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'dummy-client-id';
 
 const App: React.FC = () => {
   console.log("App component render function start");
@@ -195,7 +198,8 @@ const App: React.FC = () => {
 
   console.log("App returning JSX");
   return (
-    <div className={`min-h-screen flex flex-col ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <div className={`min-h-screen flex flex-col ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       <Navbar 
         user={currentUser} 
         isDarkMode={isDarkMode} 
@@ -318,6 +322,7 @@ const App: React.FC = () => {
         />
       </div>
     </div>
+    </GoogleOAuthProvider>
   );
 };
 

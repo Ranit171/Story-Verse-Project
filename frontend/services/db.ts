@@ -133,8 +133,31 @@ export const db = {
     }
   },
 
-  async signInWithGoogle(): Promise<{ success: boolean, error?: string }> {
-    return { success: false, error: 'Google Auth not implemented in MongoDB version yet.' };
+  async signInWithGoogle(token: string): Promise<{ success: boolean, user?: User, error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      });
+      
+      if (!response.ok) {
+        try {
+          const errorData = await response.json();
+          return { success: false, error: errorData.error || `Server error: ${response.status}` };
+        } catch {
+          return { success: false, error: `Server error: ${response.status}` };
+        }
+      }
+      
+      const result = await response.json();
+      if (!result.success) return { success: false, error: result.error };
+      
+      const user = await this.refreshUser(result.user.id);
+      return user ? { success: true, user } : { success: false, error: 'Session error.' };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
   },
 
   async updateUserProfile(userId: string, data: { username?: string; avatar?: string; bio?: string }): Promise<User | null> {
