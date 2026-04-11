@@ -1,16 +1,82 @@
 import { Router } from 'express';
 import { User } from '../models/User.js';
+import { Otp } from '../models/Otp.js';
 import { OAuth2Client } from 'google-auth-library';
 import crypto from 'crypto';
+import nodemailer from 'nodemailer';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || 'dummy-client-id');
 
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
 const router = Router();
 
-router.post('/register', async (req, res) => {
+router.post('/send-otp', async (req, res) => {
+  const { email } = req.body;
+  const lowerEmail = email ? email.toLowerCase().trim() : '';
+
+  if (!lowerEmail.endsWith('@gmail.com')) {
+    return res.status(400).json({ success: false, error: 'Only @gmail.com addresses are permitted.' });
+  }
+
   try {
-    const user = new User(req.body);
+    const existingUser = await User.findOne({ email: lowerEmail });
+    if (existingUser) return res.status(400).json({ success: false, error: 'Email already registered.' });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await Otp.deleteMany({ email: lowerEmail });
+    await new Otp({ email: lowerEmail, otp }).save();
+
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      await transporter.sendMail({
+        from: `"StoryVerse Security" <${process.env.EMAIL_USER}>`,
+        to: lowerEmail,
+        subject: 'StoryVerse Verification Code',
+        text: `Your StoryVerse verification code is: ${otp}\n\nThis code expires in 10 minutes.`,
+        html: `<div style="font-family: sans-serif; text-align: center; color: #333;">
+               <h2 style="color: #4f46e5;">StoryVerse Account Verification</h2>
+               <p>Your one-time password (OTP) is:</p>
+               <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 20px; padding: 15px; background: #f3f4f6; display: inline-block; border-radius: 8px;">${otp}</div>
+               <p>This code expires in 10 minutes.</p>
+               </div>`
+      });
+    } else {
+      console.log(`\n========================================`);
+      console.log(`[DEVELOPMENT MODE] OTP for ${lowerEmail}: ${otp}`);
+      console.log(`========================================\n`);
+    }
+
+    res.json({ success: true, message: 'OTP sent successfully.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/register', async (req, res) => {
+  const { otp, ...userData } = req.body;
+  
+  if (!otp) {
+     return res.status(400).json({ success: false, error: 'OTP is required.' });
+  }
+
+  try {
+    const record = await Otp.findOne({ email: userData.email, otp });
+    if (!record) {
+       return res.status(400).json({ success: false, error: 'Invalid or expired OTP.' });
+    }
+
+    const user = new User(userData);
     await user.save();
+    
+    await Otp.deleteOne({ _id: record._id });
+    
     res.json({ success: true, user });
   } catch (err: any) {
     res.status(400).json({ success: false, error: err.message });

@@ -13,7 +13,7 @@ interface AuthFormProps {
   onSwitchMode: (newMode: 'login' | 'register') => void;
 }
 
-type RegisterStep = 'INFO' | 'SUCCESS';
+type RegisterStep = 'INFO' | 'OTP' | 'SUCCESS';
 
 export const AuthForm: React.FC<AuthFormProps> = ({ mode, isDarkMode, onAuthSuccess, onSwitchMode }) => {
   const [loginMethod, setLoginMethod] = useState<'username' | 'email'>('username');
@@ -24,6 +24,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode, isDarkMode, onAuthSucc
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authConfirmPassword, setAuthConfirmPassword] = useState('');
+  const [authOtp, setAuthOtp] = useState('');
 
   const [authError, setAuthError] = useState('');
   const [verifyingEmail, setVerifyingEmail] = useState(false);
@@ -34,7 +35,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode, isDarkMode, onAuthSucc
     return pass.length >= 8 && /[A-Z]/.test(pass) && /[0-9]/.test(pass);
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
     setIsSubmitting(true);
@@ -72,7 +73,26 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode, isDarkMode, onAuthSucc
     }
 
     try {
-      const result = await db.register(authUsername, authEmail, authPassword);
+      const otpResult = await db.sendRegistrationOtp(authEmail);
+      if (otpResult.success) {
+        setStep('OTP');
+      } else {
+        setAuthError(otpResult.error || 'Failed to send verification code.');
+      }
+    } catch (err) {
+      setAuthError('Failed to prepare registration. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setIsSubmitting(true);
+
+    try {
+      const result = await db.register(authUsername, authEmail, authPassword, authOtp);
       if (result.success && result.user) {
         setStep('SUCCESS');
         setTimeout(() => onAuthSuccess(result.user!), 1500);
@@ -218,8 +238,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode, isDarkMode, onAuthSucc
           </>
         )}
 
-        {mode === 'register' && (
-          <form onSubmit={handleRegister} className="space-y-4">
+        {mode === 'register' && step === 'INFO' && (
+          <form onSubmit={handleSendOtp} className="space-y-4">
             <div>
               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Username</label>
               <input type="text" required value={authUsername} onChange={(e) => setAuthUsername(e.target.value)} className={`w-full p-3 rounded-xl border outline-none transition-all text-sm ${isDarkMode ? 'bg-slate-900 border-slate-700 focus:border-indigo-500 text-white' : 'bg-white border-slate-200 focus:border-indigo-500'}`} />
@@ -248,9 +268,45 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode, isDarkMode, onAuthSucc
               ) : isSubmitting ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
-                'Create Account'
+                'Continue to Verification'
               )}
             </button>
+          </form>
+        )}
+
+        {mode === 'register' && step === 'OTP' && (
+          <form onSubmit={handleVerifyOtp} className="space-y-6 animate-in slide-in-from-right duration-300">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-indigo-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600 dark:text-indigo-400">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+              </div>
+              <p className="text-sm font-medium">We've sent a 6-digit code to</p>
+              <p className="font-bold text-indigo-600">{authEmail}</p>
+            </div>
+            <div>
+              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-2 text-center">Enter Verification Code</label>
+              <input 
+                 type="text" 
+                 required 
+                 maxLength={6}
+                 placeholder="000000"
+                 value={authOtp} 
+                 onChange={(e) => setAuthOtp(e.target.value.replace(/\D/g, ''))} 
+                 className={`w-full p-4 rounded-xl border outline-none transition-all text-2xl tracking-[0.5em] text-center font-mono font-bold ${isDarkMode ? 'bg-slate-900 border-slate-700 focus:border-indigo-500 text-white' : 'bg-white border-slate-200 focus:border-indigo-500'}`} 
+              />
+            </div>
+            <div className="flex flex-col gap-3">
+              <button type="submit" disabled={isSubmitting || authOtp.length !== 6} className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2">
+                {isSubmitting ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  'Verify & Create Account'
+                )}
+              </button>
+              <button type="button" onClick={() => setStep('INFO')} className={`text-[10px] uppercase tracking-widest font-black ${isDarkMode ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'}`}>
+                 Back to Details
+              </button>
+            </div>
           </form>
         )}
 

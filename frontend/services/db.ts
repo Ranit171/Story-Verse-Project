@@ -45,10 +45,30 @@ export const getBadge = (likes: number): BadgeTier => {
 
 export const db = {
   // --- Auth & Identity ---
-  async register(username: string, email: string, password: string): Promise<{ success: boolean, user?: User, error?: string }> {
+  async sendRegistrationOtp(email: string): Promise<{ success: boolean, message?: string, error?: string }> {
+    const lowerEmail = email.toLowerCase().trim();
+    try {
+      const response = await fetch(`${API_BASE}/auth/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: lowerEmail })
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) return { success: false, error: result.error || 'Failed to send OTP' };
+      return { success: true, message: result.message };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  },
+
+  async register(username: string, email: string, password: string, otp: string): Promise<{ success: boolean, user?: User, error?: string }> {
     const lowerEmail = email.toLowerCase().trim();
     if (!lowerEmail.endsWith('@gmail.com')) {
       return { success: false, error: 'Registration restricted to @gmail.com addresses only.' };
+    }
+    
+    if (!otp) {
+      return { success: false, error: 'OTP is required.' };
     }
     
     try {
@@ -58,6 +78,7 @@ export const db = {
         username: username.toLowerCase().trim(),
         email: lowerEmail,
         password: password,
+        otp: otp,
         avatar: `https://picsum.photos/seed/${username}/100`,
         bio: '',
         bookmarks: [],
