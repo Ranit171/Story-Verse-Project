@@ -10,7 +10,7 @@ export const aiService = {
         3. The domain is known for high-risk spam.
         Respond in strict JSON format with keys: "isSafe" (boolean) and "reason" (string explaining why it's unsafe).`;
         
-      const apiKey = process.env.GEMINI_API_KEY || 'AIzaSyCRC_Px_95RNkwD1c4OdPXuVSsuqSf62rM';
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyCRC_Px_95RNkwD1c4OdPXuVSsuqSf62rM';
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -40,7 +40,7 @@ export const aiService = {
   async fixGrammar(content: string): Promise<string> {
     if (!content.trim()) return content;
     try {
-      const apiKey = process.env.GEMINI_API_KEY || 'AIzaSyCRC_Px_95RNkwD1c4OdPXuVSsuqSf62rM';
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyCRC_Px_95RNkwD1c4OdPXuVSsuqSf62rM';
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,7 +63,7 @@ export const aiService = {
       : `I'm writing a story. Here is what I have so far: "${content}". Suggest a creative next 2-3 sentences.`;
 
     try {
-      const apiKey = process.env.GEMINI_API_KEY || 'AIzaSyCRC_Px_95RNkwD1c4OdPXuVSsuqSf62rM';
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyCRC_Px_95RNkwD1c4OdPXuVSsuqSf62rM';
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

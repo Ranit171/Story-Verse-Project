@@ -74,8 +74,12 @@ export const CreatePostForm: React.FC<CreatePostFormProps> = ({ currentUser, isD
       const corrected = await aiService.fixGrammar(text);
       if (editorRef.current) editorRef.current.innerText = corrected;
       setAiStatus('Polished!');
-    } catch (error) {
-      setAiStatus('Offline');
+    } catch (error: any) {
+      if (error?.message?.toLowerCase().includes("quota") || error?.message?.toLowerCase().includes("exhausted")) {
+        setAiStatus('Limit Reached');
+      } else {
+        setAiStatus('Offline');
+      }
     } finally {
       setIsAiLoading(false);
       setTimeout(() => setAiStatus(''), 3000);
@@ -93,8 +97,12 @@ export const CreatePostForm: React.FC<CreatePostFormProps> = ({ currentUser, isD
         editorRef.current.innerHTML += " " + suggestion;
       }
       setAiStatus('Inspired!');
-    } catch (error) {
-      setAiStatus('Silent');
+    } catch (error: any) {
+      if (error?.message?.toLowerCase().includes("quota") || error?.message?.toLowerCase().includes("exhausted")) {
+        setAiStatus('Limit Reached');
+      } else {
+        setAiStatus('Silent');
+      }
     } finally {
       setIsAiLoading(false);
       setTimeout(() => setAiStatus(''), 3000);
