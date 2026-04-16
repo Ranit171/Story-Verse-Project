@@ -15,6 +15,7 @@ interface PostCardProps {
   onUserClick?: (userId: string) => void;
   onBookmarkToggle?: (updatedUser: User) => void;
   onFollowToggle?: (targetUserId: string) => void;
+  onRequireAuth?: () => void;
   notify?: (notif: Omit<Notification, 'id'>) => void;
 }
 
@@ -27,6 +28,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   onUserClick,
   onBookmarkToggle,
   onFollowToggle,
+  onRequireAuth,
   notify
 }) => {
   const [showComments, setShowComments] = useState(false);
@@ -56,7 +58,10 @@ export const PostCard: React.FC<PostCardProps> = ({
   }, [post.userId, currentUser, isOwner, post.id]);
 
   const handleLike = async () => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      if (onRequireAuth) onRequireAuth();
+      return;
+    }
     const hasLiked = post.likedBy?.includes(currentUser.id);
     const updated = { 
       ...post, 
@@ -263,7 +268,11 @@ export const PostCard: React.FC<PostCardProps> = ({
             </button>
           </div>
           <button onClick={async () => {
-             const updated = await db.toggleBookmark(currentUser!.id, post.id);
+             if (!currentUser) {
+               if (onRequireAuth) onRequireAuth();
+               return;
+             }
+             const updated = await db.toggleBookmark(currentUser.id, post.id);
              if (updated && onBookmarkToggle) {
                onBookmarkToggle(updated);
                if (notify) notify({ type: 'system', message: updated.bookmarks.includes(post.id) ? 'Story saved to library.' : 'Story removed from library.' });

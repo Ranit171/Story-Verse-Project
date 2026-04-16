@@ -16,6 +16,7 @@ interface PostListProps {
   onBlockUser?: (targetUserId: string) => void;
   onClearSearch?: () => void;
   isSearchActive?: boolean;
+  onRequireAuth?: () => void;
   notify?: (notif: Omit<Notification, 'id'>) => void;
   title: string;
   description: string;
@@ -32,6 +33,7 @@ export const PostList: React.FC<PostListProps> = ({
   onFollowToggle,
   onBookmarkToggle,
   onBlockUser,
+  onRequireAuth,
   notify,
   title,
   description
@@ -79,6 +81,7 @@ export const PostList: React.FC<PostListProps> = ({
               onUserClick={onUserClick}
               onBookmarkToggle={onBookmarkToggle}
               onFollowToggle={onFollowToggle}
+              onRequireAuth={onRequireAuth}
               notify={notify}
             />
           ))}

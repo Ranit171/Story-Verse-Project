@@ -11,14 +11,14 @@ export const ToastContainer: React.FC<ToastProps> = ({ notifications, isDarkMode
   return (
     <div className="fixed top-24 right-4 z-[100] flex flex-col gap-3 pointer-events-none max-w-sm w-full">
       {notifications.map((n) => (
-        <div 
-          key={n.id}
-          className={`pointer-events-auto p-4 rounded-2xl shadow-2xl border flex items-start gap-3 animate-in slide-in-from-right-8 duration-300 backdrop-blur-md ${
-            isDarkMode 
-              ? 'bg-slate-900/90 border-slate-800 text-white' 
-              : 'bg-white/90 border-slate-100 text-slate-900'
-          }`}
-        >
+        <div key={n.id} className="animate-in slide-in-from-right-8 duration-300">
+          <div 
+            className={`pointer-events-auto p-4 rounded-2xl shadow-2xl border flex items-start gap-3 animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite] backdrop-blur-md ${
+              isDarkMode 
+                ? 'bg-slate-900/90 border-slate-800 text-white' 
+                : 'bg-white/90 border-slate-100 text-slate-900'
+            }`}
+          >
           <div className={`mt-1 flex shrink-0 items-center justify-center w-8 h-8 rounded-xl ${
             n.type === 'like' ? 'bg-red-500/10 text-red-500' :
             n.type === 'comment' ? 'bg-indigo-500/10 text-indigo-500' :
@@ -33,6 +33,7 @@ export const ToastContainer: React.FC<ToastProps> = ({ notifications, isDarkMode
           <div className="flex-1">
             {n.title && <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">{n.title}</p>}
             <p className="text-xs font-bold leading-tight">{n.message}</p>
+          </div>
           </div>
         </div>
       ))}

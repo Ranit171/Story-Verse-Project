@@ -117,6 +117,11 @@ const App: React.FC = () => {
   const handleNavigate = async (page: Page, userId?: string) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setSearchQuery('');
+    if (page === 'create' && !currentUser) {
+      setCurrentPage('login');
+      addNotification({ type: 'system', message: 'Please sign in first' });
+      return;
+    }
     if (page === 'profile') {
       const id = userId || currentUser?.id;
       if (id) {
@@ -210,21 +215,7 @@ const App: React.FC = () => {
         currentPage={currentPage}
       />
 
-      {!dbStatus.connected && (
-        <div className="bg-red-500 text-white py-3 px-4 text-center text-xs font-bold animate-pulse z-[60] shadow-lg">
-          <div className="flex flex-col gap-1 items-center">
-            <span>Database Disconnected: {dbStatus.error || 'Unknown Error'}</span>
-            <a 
-              href="https://cloud.mongodb.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="underline hover:text-red-100 transition-colors"
-            >
-              Action Required: Allow access from "0.0.0.0/0" in your MongoDB Atlas Network Access settings.
-            </a>
-          </div>
-        </div>
-      )}
+
       
       <ToastContainer notifications={notifications} isDarkMode={isDarkMode} />
 
@@ -251,6 +242,10 @@ const App: React.FC = () => {
                   onUserClick={(id) => handleNavigate('profile', id)}
                   onActionClick={() => handleNavigate('create')}
                   onFollowToggle={handleFollowToggle}
+                  onRequireAuth={() => {
+                    setCurrentPage('login');
+                    addNotification({ type: 'system', message: 'Please sign in first' });
+                  }}
                   notify={addNotification}
                   title="" 
                   description=""
