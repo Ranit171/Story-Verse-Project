@@ -54,8 +54,15 @@ export const EditPostModal: React.FC<EditPostModalProps> = ({ post, isDarkMode, 
       const corrected = await aiService.fixGrammar(text);
       if (editorRef.current) editorRef.current.innerText = corrected;
       setAiStatus('Polished!');
-    } catch (error) {
-      setAiStatus('Offline');
+    } catch (error: any) {
+      const errMsg = error?.message?.toLowerCase() || "";
+      if (errMsg.includes("quota") || errMsg.includes("exhausted")) {
+        setAiStatus('Limit Reached');
+      } else if (errMsg.includes("leaked") || errMsg.includes("permission_denied") || errMsg.includes("api key not valid")) {
+        setAiStatus('Key Revoked');
+      } else {
+        setAiStatus('Offline');
+      }
     } finally {
       setIsAiLoading(false);
       setTimeout(() => setAiStatus(''), 2000);

@@ -9,8 +9,9 @@ export const aiService = {
         2. It follows patterns of procedurally generated "bot" emails (e.g., random strings of numbers/letters like 'a1b2c3d4@gmail.com').
         3. The domain is known for high-risk spam.
         Respond in strict JSON format with keys: "isSafe" (boolean) and "reason" (string explaining why it's unsafe).`;
-        
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyCRC_Px_95RNkwD1c4OdPXuVSsuqSf62rM';
+
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) throw new Error("API key not valid");
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -40,7 +41,8 @@ export const aiService = {
   async fixGrammar(content: string): Promise<string> {
     if (!content.trim()) return content;
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyCRC_Px_95RNkwD1c4OdPXuVSsuqSf62rM';
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) throw new Error("API key not valid");
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,12 +60,13 @@ export const aiService = {
   },
 
   async getSuggestion(title: string, content: string): Promise<string> {
-    const prompt = title 
+    const prompt = title
       ? `I'm writing a story titled "${title}". Here is what I have so far: "${content}". Suggest the next 2-3 sentences to continue the story in a creative way.`
       : `I'm writing a story. Here is what I have so far: "${content}". Suggest a creative next 2-3 sentences.`;
 
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyCRC_Px_95RNkwD1c4OdPXuVSsuqSf62rM';
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) throw new Error("API key not valid");
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

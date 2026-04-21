@@ -75,8 +75,11 @@ export const CreatePostForm: React.FC<CreatePostFormProps> = ({ currentUser, isD
       if (editorRef.current) editorRef.current.innerText = corrected;
       setAiStatus('Polished!');
     } catch (error: any) {
-      if (error?.message?.toLowerCase().includes("quota") || error?.message?.toLowerCase().includes("exhausted")) {
+      const errMsg = error?.message?.toLowerCase() || "";
+      if (errMsg.includes("quota") || errMsg.includes("exhausted")) {
         setAiStatus('Limit Reached');
+      } else if (errMsg.includes("leaked") || errMsg.includes("permission_denied") || errMsg.includes("api key not valid")) {
+        setAiStatus('Key Revoked');
       } else {
         setAiStatus('Offline');
       }
@@ -98,8 +101,11 @@ export const CreatePostForm: React.FC<CreatePostFormProps> = ({ currentUser, isD
       }
       setAiStatus('Inspired!');
     } catch (error: any) {
-      if (error?.message?.toLowerCase().includes("quota") || error?.message?.toLowerCase().includes("exhausted")) {
+      const errMsg = error?.message?.toLowerCase() || "";
+      if (errMsg.includes("quota") || errMsg.includes("exhausted")) {
         setAiStatus('Limit Reached');
+      } else if (errMsg.includes("leaked") || errMsg.includes("permission_denied") || errMsg.includes("api key not valid")) {
+        setAiStatus('Key Revoked');
       } else {
         setAiStatus('Silent');
       }
