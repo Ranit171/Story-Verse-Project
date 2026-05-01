@@ -29,7 +29,7 @@ router.post('/', async (req, res) => {
 
 router.patch('/:id', async (req, res) => {
   try {
-    const post = await Post.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
+    const post = await Post.findOneAndUpdate({ id: req.params.id }, req.body, { returnDocument: 'after' });
     res.json(post);
   } catch (err: any) {
     res.status(500).json({ error: err.message });

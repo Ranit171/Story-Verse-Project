@@ -19,7 +19,7 @@ router.get('/:id', async (req, res) => {
 
 router.patch('/:id', async (req, res) => {
   try {
-    const user = await User.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
+    const user = await User.findOneAndUpdate({ id: req.params.id }, req.body, { returnDocument: 'after' });
     res.json(user);
   } catch (err: any) {
     res.status(500).json({ error: err.message });

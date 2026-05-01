@@ -15,21 +15,21 @@ router.post('/', async (req, res) => {
     let targetUser: any;
 
     if (target_type === 'user') {
-      targetUser = await User.findOneAndUpdate({ id: target_id }, { $inc: { report_count: 1 } }, { new: true });
+      targetUser = await User.findOneAndUpdate({ id: target_id }, { $inc: { report_count: 1 } }, { returnDocument: 'after' });
       if (targetUser && targetUser.report_count >= 5) {
         const banDate = new Date();
         banDate.setDate(banDate.getDate() + 7); // 7 day ban
         await User.findOneAndUpdate({ id: target_id }, { banned_until: banDate });
       }
     } else if (target_type === 'post') {
-      const post = await Post.findOneAndUpdate({ id: target_id }, { $inc: { report_count: 1 } }, { new: true });
+      const post = await Post.findOneAndUpdate({ id: target_id }, { $inc: { report_count: 1 } }, { returnDocument: 'after' });
       if (post) {
-        targetUser = await User.findOneAndUpdate({ id: post.user_id }, { $inc: { report_count: 1 } }, { new: true });
+        targetUser = await User.findOneAndUpdate({ id: post.user_id }, { $inc: { report_count: 1 } }, { returnDocument: 'after' });
       }
     } else if (target_type === 'comment') {
-      const comment = await Comment.findOneAndUpdate({ id: target_id }, { $inc: { report_count: 1 } }, { new: true });
+      const comment = await Comment.findOneAndUpdate({ id: target_id }, { $inc: { report_count: 1 } }, { returnDocument: 'after' });
       if (comment) {
-        targetUser = await User.findOneAndUpdate({ id: comment.user_id }, { $inc: { report_count: 1 } }, { new: true });
+        targetUser = await User.findOneAndUpdate({ id: comment.user_id }, { $inc: { report_count: 1 } }, { returnDocument: 'after' });
       }
     }
 

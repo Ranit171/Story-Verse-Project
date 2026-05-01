@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { User, Page } from '../types';
 import { LOGO_SVG } from '../constants';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavbarProps {
   user: User | null;
@@ -26,7 +27,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
   const NavItem = ({ page, label }: { page: Page; label: string }) => (
-    <button 
+    <motion.button 
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
       onClick={() => onNavigate(page)}
       className={`px-2 py-1 text-[10px] font-black uppercase tracking-widest transition-all ${
         currentPage === page 
@@ -35,7 +38,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       }`}
     >
       {label}
-    </button>
+    </motion.button>
   );
 
   return (
@@ -142,9 +145,15 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       {/* Mobile Search Overlay */}
-      {isMobileSearchOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-white dark:bg-slate-900 p-4 border-b shadow-lg animate-in slide-in-from-top duration-200">
-           <div className="relative">
+      <AnimatePresence>
+        {isMobileSearchOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="md:hidden absolute top-full left-0 w-full bg-white dark:bg-slate-900 p-4 border-b shadow-lg"
+          >
+             <div className="relative">
             <input
               autoFocus
               type="text"
@@ -164,8 +173,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </nav>
   );
 };

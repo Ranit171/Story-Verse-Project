@@ -9,6 +9,7 @@ import { PostList } from './components/PostList';
 import { Profile } from './components/Profile';
 import { ToastContainer } from './components/ToastContainer';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'dummy-client-id';
 
@@ -114,7 +115,7 @@ const App: React.FC = () => {
     addNotification({ type: 'system', message: 'Successfully logged out.' });
   };
 
-  const handleNavigate = async (page: Page, userId?: string) => {
+  const handleNavigate = useCallback(async (page: Page, userId?: string) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setSearchQuery('');
     if (page === 'create' && !currentUser) {
@@ -149,14 +150,14 @@ const App: React.FC = () => {
       setCurrentPage(page);
       setViewingUser(null);
     }
-  };
+  }, [currentUser, handleLogout, addNotification]);
 
-  const handleUserUpdate = (updated: User) => {
+  const handleUserUpdate = useCallback((updated: User) => {
     if (currentUser?.id === updated.id) setCurrentUser(updated);
     if (viewingUser?.id === updated.id) setViewingUser(updated);
-  };
+  }, [currentUser, viewingUser]);
 
-  const handleFollowToggle = async (targetUserId: string) => {
+  const handleFollowToggle = useCallback(async (targetUserId: string) => {
     if (!currentUser) {
       setCurrentPage('login');
       return;
@@ -176,7 +177,16 @@ const App: React.FC = () => {
         title: 'Connection Updated'
       });
     }
-  };
+  }, [currentUser, viewingUser, addNotification]);
+
+  const handlePostUpdate = useCallback((upd: Post) => {
+    setPosts(prev => prev.map(p => p.id === upd.id ? upd : p));
+  }, []);
+
+  const handleRequireAuth = useCallback(() => {
+    setCurrentPage('login');
+    addNotification({ type: 'system', message: 'Please sign in first' });
+  }, [addNotification]);
 
   const getListHeader = () => {
     if (searchQuery) return { title: `Search Results`, description: `Displaying matches for "${searchQuery}".` };
@@ -225,58 +235,64 @@ const App: React.FC = () => {
             <div className={`w-12 h-12 border-4 border-t-indigo-500 rounded-full animate-spin ${isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}></div>
           </div>
         ) : (
-          <div className="space-y-8 sm:space-y-12">
-            {(currentPage === 'home' || currentPage === 'my-stories' || currentPage === 'bookmarks') && (
-              <>
-                <div className="text-center mb-10 sm:mb-16">
-                  <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl font-bold mb-3 sm:mb-4 tracking-tight px-2">{title}</h1>
-                  <p className="text-[10px] sm:text-sm md:text-base text-slate-400 font-medium px-4">{description}</p>
-                </div>
-                <PostList 
-                  posts={filteredPosts}
-                  currentUser={currentUser}
-                  isDarkMode={isDarkMode}
-                  onPostUpdate={(upd) => setPosts(prev => prev.map(p => p.id === upd.id ? upd : p))}
-                  onPostDeleted={fetchPosts}
-                  onBookmarkToggle={handleUserUpdate}
-                  onUserClick={(id) => handleNavigate('profile', id)}
-                  onActionClick={() => handleNavigate('create')}
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={currentPage + (viewingUser?.id || '')} 
+              initial={{ opacity: 0, y: 15 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0, y: -15 }} 
+              transition={{ duration: 0.3 }}
+              className="space-y-8 sm:space-y-12"
+            >
+              {(currentPage === 'home' || currentPage === 'my-stories' || currentPage === 'bookmarks') && (
+                <>
+                  <div className="text-center mb-10 sm:mb-16">
+                    <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl font-bold mb-3 sm:mb-4 tracking-tight px-2">{title}</h1>
+                    <p className="text-[10px] sm:text-sm md:text-base text-slate-400 font-medium px-4">{description}</p>
+                  </div>
+                  <PostList 
+                    posts={filteredPosts}
+                    currentUser={currentUser}
+                    isDarkMode={isDarkMode}
+                    onPostUpdate={handlePostUpdate}
+                    onPostDeleted={fetchPosts}
+                    onBookmarkToggle={handleUserUpdate}
+                    onUserClick={(id) => handleNavigate('profile', id)}
+                    onActionClick={() => handleNavigate('create')}
+                    onFollowToggle={handleFollowToggle}
+                    onRequireAuth={handleRequireAuth}
+                    notify={addNotification}
+                    title="" 
+                    description=""
+                  />
+                </>
+              )}
+
+              {currentPage === 'create' && currentUser && (
+                <CreatePostForm currentUser={currentUser} isDarkMode={isDarkMode} onPostCreated={() => { fetchPosts(); setCurrentPage('home'); addNotification({ type: 'system', message: 'Your narrative has been published.' }); }} />
+              )}
+
+              {currentPage === 'profile' && viewingUser && (
+                <Profile 
+                  user={viewingUser} 
+                  currentUser={currentUser} 
+                  posts={posts} 
+                  isDarkMode={isDarkMode} 
+                  onAccountDeleted={handleLogout} 
+                  onLogout={handleLogout} 
+                  onUserUpdate={handleUserUpdate} 
                   onFollowToggle={handleFollowToggle}
-                  onRequireAuth={() => {
-                    setCurrentPage('login');
-                    addNotification({ type: 'system', message: 'Please sign in first' });
-                  }}
-                  notify={addNotification}
-                  title="" 
-                  description=""
+                  onUserClick={(id) => handleNavigate('profile', id)}
                 />
-              </>
-            )}
+              )}
 
-            {currentPage === 'create' && currentUser && (
-              <CreatePostForm currentUser={currentUser} isDarkMode={isDarkMode} onPostCreated={() => { fetchPosts(); setCurrentPage('home'); addNotification({ type: 'system', message: 'Your narrative has been published.' }); }} />
-            )}
-
-            {currentPage === 'profile' && viewingUser && (
-              <Profile 
-                user={viewingUser} 
-                currentUser={currentUser} 
-                posts={posts} 
-                isDarkMode={isDarkMode} 
-                onAccountDeleted={handleLogout} 
-                onLogout={handleLogout} 
-                onUserUpdate={handleUserUpdate} 
-                onFollowToggle={handleFollowToggle}
-                onUserClick={(id) => handleNavigate('profile', id)}
-              />
-            )}
-
-            {(currentPage === 'login' || currentPage === 'register') && (
-              <div className="max-w-md mx-auto pt-4 sm:pt-10">
-                <AuthForm mode={currentPage} isDarkMode={isDarkMode} onAuthSuccess={(u) => { setCurrentUser(u); setCurrentPage('home'); addNotification({ type: 'system', message: `Welcome back, @${u.username}` }); }} onSwitchMode={setCurrentPage} />
-              </div>
-            )}
-          </div>
+              {(currentPage === 'login' || currentPage === 'register') && (
+                <div className="max-w-md mx-auto pt-4 sm:pt-10">
+                  <AuthForm mode={currentPage} isDarkMode={isDarkMode} onAuthSuccess={(u) => { setCurrentUser(u); setCurrentPage('home'); addNotification({ type: 'system', message: `Welcome back, @${u.username}` }); }} onSwitchMode={setCurrentPage} />
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
         )}
       </main>
 

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Post, User, Notification } from '../types';
 import { PostCard } from './PostCard';
+import { motion } from 'framer-motion';
 
 interface PostListProps {
   posts: Post[];
@@ -38,6 +39,19 @@ export const PostList: React.FC<PostListProps> = ({
   title,
   description
 }) => {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+  };
+
   return (
     <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
       {title && (
@@ -69,23 +83,29 @@ export const PostList: React.FC<PostListProps> = ({
           </button>
         </div>
       ) : (
-        <div className="space-y-6">
+        <motion.div 
+          className="space-y-6"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {posts.map(post => (
-            <PostCard 
-              key={post.id} 
-              post={post} 
-              currentUser={currentUser} 
-              isDarkMode={isDarkMode} 
-              onPostUpdate={onPostUpdate}
-              onPostDeleted={onPostDeleted}
-              onUserClick={onUserClick}
-              onBookmarkToggle={onBookmarkToggle}
-              onFollowToggle={onFollowToggle}
-              onRequireAuth={onRequireAuth}
-              notify={notify}
-            />
+            <motion.div key={post.id} variants={itemVariants} layout>
+              <PostCard 
+                post={post} 
+                currentUser={currentUser} 
+                isDarkMode={isDarkMode} 
+                onPostUpdate={onPostUpdate}
+                onPostDeleted={onPostDeleted}
+                onUserClick={onUserClick}
+                onBookmarkToggle={onBookmarkToggle}
+                onFollowToggle={onFollowToggle}
+                onRequireAuth={onRequireAuth}
+                notify={notify}
+              />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
     </section>
   );
